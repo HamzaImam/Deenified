@@ -1,0 +1,519 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/constants/app_constants.dart';
+import '../../../providers/providers.dart';
+import '../../../services/supabase_service.dart';
+
+class AudioPlayerScreen extends ConsumerStatefulWidget {
+  final String storyId;
+
+  const AudioPlayerScreen({super.key, required this.storyId});
+
+  @override
+  ConsumerState<AudioPlayerScreen> createState() => _AudioPlayerScreenState();
+}
+
+class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
+  late final AudioPlayer _player;
+  bool _isLoadingAudio = true;
+  bool _progressLoaded = false;
+  String? _audioError;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = AudioPlayer();
+  }
+
+  Future<void> _loadAudio(String audioPath) async {
+    if (!_isLoadingAudio) return; // Already loaded or loading
+    try {
+      final url = Supabase.instance.client.storage
+          .from('audio-files')
+          .getPublicUrl(audioPath);
+      await _player.setUrl(url);
+
+      // Resume from saved position
+      if (!_progressLoaded) {
+        _progressLoaded = true;
+        try {
+          final progress =
+              await SupabaseService.instance.getStoryProgress(widget.storyId);
+          if (progress != null) {
+            final savedPos = progress['playback_position_seconds'] as int? ?? 0;
+            if (savedPos > 0) {
+              await _player.seek(Duration(seconds: savedPos));
+            }
+          }
+        } catch (_) {
+          // Ignore progress load errors
+        }
+      }
+
+      setState(() {
+        _isLoadingAudio = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingAudio = false;
+        _audioError = e.toString();
+      });
+    }
+  }
+
+  String? _getCoverUrl(Map<String, dynamic> story) {
+    final coverPath = story['cover_image_url'] as String?;
+    if (coverPath == null || coverPath.isEmpty) return null;
+
+    return Supabase.instance.client.storage
+        .from('cover-images')
+        .getPublicUrl(coverPath);
+  }
+
+  String _formatDuration(Duration d) {
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  /// Save current playback position to story_progress
+  Future<void> _saveProgress() async {
+    final pos = _player.position.inSeconds;
+    final dur = _player.duration?.inSeconds ?? 0;
+    final completed = dur > 0 && pos >= dur - 2; // within 2s of end
+    await SupabaseService.instance.updateStoryProgress(
+      storyId: widget.storyId,
+      positionSeconds: pos,
+      completed: completed,
+    );
+  }
+
+  @override
+  void dispose() {
+    _saveProgress();
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storyAsync = ref.watch(audioStoryProvider(widget.storyId));
+
+    return Scaffold(
+      backgroundColor: AppColors.richBlack,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            await _saveProgress();
+            _player.stop();
+            if (context.mounted) context.pop();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              // Show options menu
+            },
+          ),
+        ],
+      ),
+      body: storyAsync.when(
+        data: (story) {
+          if (story == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppColors.textTertiary,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Story not found',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Load audio if available
+          final audioPath = story['audio_url'] as String?;
+          if (audioPath != null && audioPath.isNotEmpty) {
+            _loadAudio(audioPath);
+          }
+
+          final coverUrl = _getCoverUrl(story);
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                children: [
+                  const Spacer(),
+
+                  // Cover Art
+                  Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      color: AppColors.deepCharcoal,
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      border: Border.all(color: AppColors.glassBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.metallicGold.withValues(alpha: 0.2),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (coverUrl != null)
+                            Image.network(
+                              coverUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Icon(
+                                  Icons.headphones,
+                                  size: 80,
+                                  color: AppColors.metallicGold,
+                                ),
+                              ),
+                            )
+                          else
+                            Center(
+                              child: Icon(
+                                Icons.headphones,
+                                size: 80,
+                                color: AppColors.metallicGold,
+                              ),
+                            ),
+                          // Premium badge
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.metallicGold,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.sm),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: AppColors.richBlack,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Premium',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: AppColors.richBlack,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Series Name
+                  if (story['series_name'] != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.metallicGold.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Text(
+                        story['series_name'],
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: AppColors.metallicGold,
+                            ),
+                      ),
+                    ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // Title & Description
+                  Text(
+                    story['title'] ?? 'Untitled',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    story['description'] ?? '',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: AppSpacing.xxl),
+
+                  // Audio Controls (stream-based)
+                  if (_audioError != null)
+                    Text(
+                      'Audio unavailable',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.error,
+                          ),
+                    )
+                  else ...[
+                    // Progress Bar
+                    StreamBuilder<Duration?>(
+                      stream: _player.durationStream,
+                      builder: (context, durationSnap) {
+                        final totalDuration =
+                            durationSnap.data ?? Duration.zero;
+                        return StreamBuilder<Duration>(
+                          stream: _player.positionStream,
+                          builder: (context, positionSnap) {
+                            final position = positionSnap.data ?? Duration.zero;
+                            final progress = totalDuration.inMilliseconds > 0
+                                ? position.inMilliseconds /
+                                    totalDuration.inMilliseconds
+                                : 0.0;
+
+                            return Column(
+                              children: [
+                                SliderTheme(
+                                  data: SliderTheme.of(context).copyWith(
+                                    activeTrackColor: AppColors.metallicGold,
+                                    inactiveTrackColor: AppColors.deepCharcoal,
+                                    thumbColor: AppColors.metallicGold,
+                                    overlayColor: AppColors.metallicGold
+                                        .withValues(alpha: 0.2),
+                                    trackHeight: 6,
+                                    thumbShape: const RoundSliderThumbShape(
+                                        enabledThumbRadius: 8),
+                                  ),
+                                  child: Slider(
+                                    value: progress.clamp(0.0, 1.0),
+                                    onChanged: (value) {
+                                      final newPos = Duration(
+                                        milliseconds: (value *
+                                                totalDuration.inMilliseconds)
+                                            .toInt(),
+                                      );
+                                      _player.seek(newPos);
+                                    },
+                                  ),
+                                ),
+                                // Time Labels
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.sm),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        _formatDuration(position),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: AppColors.textTertiary,
+                                            ),
+                                      ),
+                                      Text(
+                                        _formatDuration(totalDuration),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: AppColors.textTertiary,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Playback Controls
+                    StreamBuilder<PlayerState>(
+                      stream: _player.playerStateStream,
+                      builder: (context, snapshot) {
+                        final playerState = snapshot.data;
+                        final isPlaying = playerState?.playing ?? false;
+                        final processingState = playerState?.processingState ??
+                            ProcessingState.idle;
+                        final isLoading =
+                            processingState == ProcessingState.loading ||
+                                processingState == ProcessingState.buffering;
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Backward 10s
+                            IconButton(
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                final newPos = _player.position -
+                                    const Duration(seconds: 10);
+                                _player.seek(newPos < Duration.zero
+                                    ? Duration.zero
+                                    : newPos);
+                              },
+                              icon: const Icon(Icons.replay_10, size: 36),
+                              color: AppColors.textPrimary,
+                            ),
+
+                            const SizedBox(width: AppSpacing.lg),
+
+                            // Play/Pause
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                if (processingState ==
+                                    ProcessingState.completed) {
+                                  _player.seek(Duration.zero);
+                                  _player.play();
+                                } else if (isPlaying) {
+                                  _player.pause();
+                                } else {
+                                  _player.play();
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(AppSpacing.lg),
+                                decoration: BoxDecoration(
+                                  color: AppColors.metallicGold,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.metallicGold
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.richBlack,
+                                          strokeWidth: 3,
+                                        ),
+                                      )
+                                    : Icon(
+                                        isPlaying
+                                            ? Icons.pause
+                                            : Icons.play_arrow,
+                                        size: 40,
+                                        color: AppColors.richBlack,
+                                      ),
+                              ),
+                            ),
+
+                            const SizedBox(width: AppSpacing.lg),
+
+                            // Forward 10s
+                            IconButton(
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                final newPos = _player.position +
+                                    const Duration(seconds: 10);
+                                final duration =
+                                    _player.duration ?? Duration.zero;
+                                _player.seek(
+                                    newPos > duration ? duration : newPos);
+                              },
+                              icon: const Icon(Icons.forward_10, size: 36),
+                              color: AppColors.textPrimary,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+
+                  const Spacer(),
+                ],
+              ),
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.textTertiary,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Failed to load story',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  e.toString(),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

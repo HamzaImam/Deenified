@@ -1,0 +1,71 @@
+import 'package:flutter/material.dart';
+
+/// App color palette following the "Black & Gold" system
+/// from designGuidelines.md
+class AppColors {
+  AppColors._();
+
+  // Primary Colors
+  static const richBlack = Color(0xFF0D0D0D);
+  static const deepCharcoal = Color(0xFF1A1A1A);
+  static const metallicGold = Color(0xFFD4AF37);
+  static const softGold = Color(0xFFC5A059);
+  static const darkGold = Color(0xFFA67C00);
+
+  // Glass Effect
+  static const glassWhite = Color.fromRGBO(255, 255, 255, 0.05);
+  static const glassBorder = Color.fromRGBO(255, 255, 255, 0.1);
+
+  // Status Colors
+  static const success = Color(0xFF2E7D32);
+  static const error = Color(0xFFC62828);
+  static const warning = Color(0xFFFFB300);
+
+  // Text Colors
+  static const textPrimary = Color(0xFFFFFFFF);
+  static const textSecondary = Color(0xFFB0B0B0);
+  static const textTertiary = Color(0xFF808080);
+}
+
+/// App spacing constants
+class AppSpacing {
+  AppSpacing._();
+
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+  static const double xxl = 48.0;
+}
+
+/// App border radius constants
+class AppRadius {
+  AppRadius._();
+
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;
+  static const double xl = 24.0;
+  static const double full = 100.0;
+}
+
+/// App durations for animations
+class AppDurations {
+  AppDurations._();
+
+  static const fast = Duration(milliseconds: 150);
+  static const normal = Duration(milliseconds: 300);
+  static const slow = Duration(milliseconds: 500);
+}
+
+/// Quiz passing threshold
+class AppConfig {
+  AppConfig._();
+
+  static const double quizPassThreshold = 0.8; // 80%
+  static const int dailyChallengeQuestions = 7;
+  static const int surahQuizQuestionsMin = 8;
+  static const int surahQuizQuestionsMax = 12;
+  static const int topicPracticeQuestions = 10;
+}
