@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../services/supabase_service.dart';
+import '../../../services/revenuecat_service.dart';
 import '../providers/onboarding_provider.dart';
 
 class SignupFormScreen extends ConsumerStatefulWidget {
@@ -104,6 +105,8 @@ class _SignupFormScreenState extends ConsumerState<SignupFormScreen> {
         ref.read(onboardingProvider.notifier).completeOnboarding();
 
         if (user != null) {
+          // Sync user ID with RevenueCat
+          await RevenueCatService.instance.login(user.id);
           // No email confirmation required — go straight to home
           context.go('/home');
         } else {
@@ -436,7 +439,7 @@ class _SignupFormScreenState extends ConsumerState<SignupFormScreen> {
                     WidgetSpan(
                       child: GestureDetector(
                         onTap: () =>
-                            _launchUrl('https://deenified.com/privacy'),
+                            _launchUrl('https://deenified.com/pages/privacy'),
                         child: Text(
                           'Privacy Policy',
                           style:

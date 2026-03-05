@@ -9,9 +9,9 @@ class RevenueCatService {
   /// Entitlement identifier for premium access
   static const String premiumEntitlement = 'Deenified Pro';
 
-  /// Product identifiers (matching RevenueCat Test Store)
-  static const String monthlyProductId = 'monthly';
-  static const String yearlyProductId = 'yearly';
+  /// Product identifiers (matching App Store Connect)
+  static const String monthlyProductId = 'df_11.99_1m';
+  static const String yearlyProductId = 'df_59.99_1y';
 
   /// Get current customer info
   Future<CustomerInfo> getCustomerInfo() async {
@@ -116,9 +116,9 @@ class RevenueCatService {
 
     return SubscriptionStatus(
       isActive: premium.isActive,
-      type: premium.productIdentifier.contains('monthly')
-          ? SubscriptionType.monthly
-          : SubscriptionType.yearly,
+      type: premium.productIdentifier == yearlyProductId
+          ? SubscriptionType.yearly
+          : SubscriptionType.monthly,
       expirationDate: premium.expirationDate != null
           ? DateTime.parse(premium.expirationDate!)
           : null,

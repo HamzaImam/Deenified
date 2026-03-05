@@ -38,7 +38,7 @@ Future<void> main() async {
 
 /// Initialize RevenueCat SDK
 Future<void> _initializeRevenueCat() async {
-  await Purchases.setLogLevel(LogLevel.debug);
+  await Purchases.setLogLevel(LogLevel.warn);
 
   final configuration = PurchasesConfiguration(
     dotenv.env['REVENUECAT_API_KEY']!,

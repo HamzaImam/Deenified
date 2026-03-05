@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../providers/providers.dart';
+import '../../../providers/subscription_provider.dart';
+import '../../../services/revenuecat_service.dart';
 import '../../../shared/widgets/widgets.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -16,8 +18,6 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(userProfileProvider);
     final streak = ref.watch(currentStreakProvider);
     final longestStreak = ref.watch(longestStreakProvider);
-
-    final displayName = user?.email?.split('@').first ?? 'Learner';
 
     return Scaffold(
       backgroundColor: AppColors.richBlack,
@@ -31,44 +31,66 @@ class ProfileScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
-            // Avatar
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.deepCharcoal,
-                border: Border.all(color: AppColors.metallicGold, width: 3),
-              ),
-              child: Center(
-                child: Text(
-                  displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: AppColors.metallicGold,
-                        fontWeight: FontWeight.bold,
+            // Avatar + Name — depends on profile data
+            profileAsync.when(
+              data: (profile) {
+                final firstName = profile?['first_name']?.toString() ?? '';
+                final lastName = profile?['last_name']?.toString() ?? '';
+                final fullName = '$firstName $lastName'.trim();
+                final displayName = fullName.isNotEmpty ? fullName : 'Learner';
+
+                return Column(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.deepCharcoal,
+                        border:
+                            Border.all(color: AppColors.metallicGold, width: 3),
                       ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            Text(
-              displayName,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-
-            if (user?.email != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                user!.email!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textTertiary,
+                      child: Center(
+                        child: Text(
+                          displayName.isNotEmpty
+                              ? displayName[0].toUpperCase()
+                              : '?',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineLarge
+                              ?.copyWith(
+                                color: AppColors.metallicGold,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      displayName,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                    ),
+                    if (user?.email != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        user!.email!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                      ),
+                    ],
+                  ],
+                );
+              },
+              loading: () => const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator()),
               ),
-            ],
+              error: (_, __) => const SizedBox.shrink(),
+            ),
 
             const SizedBox(height: AppSpacing.xl),
 
@@ -94,6 +116,11 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.xl),
 
+            // Subscription Status Card
+            _buildSubscriptionCard(context, ref),
+
+            const SizedBox(height: AppSpacing.md),
+
             // Menu Items
             _buildMenuItem(
               context,
@@ -113,14 +140,14 @@ class ProfileScreen extends ConsumerWidget {
               icon: Icons.privacy_tip_outlined,
               title: 'Privacy Policy',
               subtitle: null,
-              onTap: () => _launchUrl('https://deenified.com/privacy'),
+              onTap: () => _launchUrl('https://deenified.com/pages/privacy'),
             ),
             _buildMenuItem(
               context,
               icon: Icons.description_outlined,
               title: 'Terms of Service',
               subtitle: null,
-              onTap: () => _launchUrl('https://deenified.com/terms'),
+              onTap: () => _launchUrl('https://deenified.com/pages/terms'),
             ),
             _buildMenuItem(
               context,
@@ -165,6 +192,7 @@ class ProfileScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
+              await RevenueCatService.instance.logout();
               await ref.read(authProvider.notifier).signOut();
               if (context.mounted) {
                 context.go('/login');
@@ -200,6 +228,125 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildSubscriptionCard(BuildContext context, WidgetRef ref) {
+    final subscriptionAsync = ref.watch(subscriptionProvider);
+
+    return subscriptionAsync.when(
+      data: (status) {
+        final planName = status.isActive
+            ? (status.type == SubscriptionType.yearly ? 'Yearly' : 'Monthly')
+            : 'Free';
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.deepCharcoal,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(
+              color: status.isActive
+                  ? AppColors.metallicGold.withValues(alpha: 0.4)
+                  : AppColors.glassBorder,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    status.isActive
+                        ? Icons.workspace_premium
+                        : Icons.star_outline,
+                    color: AppColors.metallicGold,
+                    size: 22,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Subscription',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: status.isActive
+                          ? AppColors.metallicGold.withValues(alpha: 0.15)
+                          : AppColors.glassBorder,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      planName,
+                      style: TextStyle(
+                        color: status.isActive
+                            ? AppColors.metallicGold
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (status.isActive && status.expirationDate != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Renews ${_formatDate(status.expirationDate!)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                ),
+              ],
+              if (status.isActive) ...[
+                const SizedBox(height: AppSpacing.md),
+                GestureDetector(
+                  onTap: () => _launchUrl(
+                      'https://apps.apple.com/account/subscriptions'),
+                  child: Text(
+                    'Manage Subscription',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.metallicGold,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.metallicGold,
+                        ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   Widget _buildMenuItem(

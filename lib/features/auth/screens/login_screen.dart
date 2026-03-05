@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../services/supabase_service.dart';
+import '../../../services/revenuecat_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -33,10 +34,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await SupabaseService.instance.signIn(
+      final response = await SupabaseService.instance.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+      // Sync user ID with RevenueCat
+      if (response.user != null) {
+        await RevenueCatService.instance.login(response.user!.id);
+      }
       if (mounted) {
         context.go('/home');
       }

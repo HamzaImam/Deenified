@@ -494,7 +494,7 @@ class _ExitIntentBottomSheetState extends State<_ExitIntentBottomSheet> {
 
           // Offer copy
           Text(
-            'One-time offer. Get your first year for',
+            'Start your Islamic learning journey today',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: AppColors.textSecondary,
@@ -503,14 +503,14 @@ class _ExitIntentBottomSheetState extends State<_ExitIntentBottomSheet> {
 
           const SizedBox(height: AppSpacing.sm),
 
-          // Price
+          // Price — dynamic from actual package
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '\$29.99',
+                widget.offering?.annual?.storeProduct.priceString ?? '\$59.99',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       color: AppColors.metallicGold,
                       fontWeight: FontWeight.bold,
@@ -528,7 +528,7 @@ class _ExitIntentBottomSheetState extends State<_ExitIntentBottomSheet> {
 
           const SizedBox(height: AppSpacing.xs),
 
-          // Discount badge
+          // Savings badge
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -541,7 +541,7 @@ class _ExitIntentBottomSheetState extends State<_ExitIntentBottomSheet> {
               borderRadius: BorderRadius.circular(AppRadius.full),
             ),
             child: const Text(
-              '50% OFF — Limited Time',
+              'Save 58% vs Monthly',
               style: TextStyle(
                 color: AppColors.richBlack,
                 fontWeight: FontWeight.bold,
@@ -553,7 +553,7 @@ class _ExitIntentBottomSheetState extends State<_ExitIntentBottomSheet> {
           const SizedBox(height: AppSpacing.sm),
 
           Text(
-            'Then \$59.99/year after your first year',
+            'That\'s just \$4.99/month — cancel anytime',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textTertiary,
                 ),
