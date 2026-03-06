@@ -45,5 +45,18 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Privacy Usage Descriptions (required by App Store) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Deenified uses the microphone for text-to-speech pronunciation features.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Deenified uses speech recognition to help with Quran pronunciation practice.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Deenified would like to personalize your learning experience.</string>
+	<!-- Background Audio for audio stories -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+	</array>
 </dict>
 </plist>
