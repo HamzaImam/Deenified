@@ -70,9 +70,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/app_icon.png"
+  image_path: "assets/icons/Deenified_Icon.png"
   adaptive_icon_background: "#FFD700"
-  adaptive_icon_foreground: "assets/app_icon.png"
+  adaptive_icon_foreground: "assets/icons/Deenified_Icon.png"
 
 flutter:
   uses-material-design: true
