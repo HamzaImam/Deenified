@@ -3,23 +3,27 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../services/revenuecat_service.dart';
-import '../providers/onboarding_provider.dart';
+import '../../../providers/providers.dart';
 
-class PaywallScreen extends ConsumerStatefulWidget {
-  const PaywallScreen({super.key});
+/// Standalone paywall shown when a returning user's subscription has expired.
+class RenewalPaywallScreen extends ConsumerStatefulWidget {
+  const RenewalPaywallScreen({super.key});
 
   @override
-  ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
+  ConsumerState<RenewalPaywallScreen> createState() =>
+      _RenewalPaywallScreenState();
 }
 
-class _PaywallScreenState extends ConsumerState<PaywallScreen> {
+class _RenewalPaywallScreenState extends ConsumerState<RenewalPaywallScreen> {
   List<Package> _packages = [];
-  String _selectedPlan = 'yearly'; // Track selection by plan name, not Package
+  String _selectedPlan = 'yearly';
   bool _isLoading = true;
   bool _isPurchasing = false;
 
@@ -37,25 +41,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         if (offering != null) {
           _packages = offering.availablePackages;
           developer.log(
-            'Loaded ${_packages.length} packages from offering',
+            'RenewalPaywall: Loaded ${_packages.length} packages',
             name: 'Paywall',
           );
-          for (final pkg in _packages) {
-            developer.log(
-              '  ${pkg.identifier} | type=${pkg.packageType} | '
-              '${pkg.storeProduct.priceString}',
-              name: 'Paywall',
-            );
-          }
         } else {
-          developer.log('No offering loaded from RevenueCat', name: 'Paywall');
+          developer.log(
+            'RenewalPaywall: No offering loaded',
+            name: 'Paywall',
+          );
         }
         _isLoading = false;
       });
     }
   }
 
-  /// Get the Package for the currently selected plan
   Package? get _selectedPackage {
     try {
       if (_selectedPlan == 'yearly') {
@@ -69,7 +68,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
-  /// Get a package's price string by type, with fallback
   String _priceFor(PackageType type, String fallback) {
     try {
       return _packages
@@ -106,9 +104,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       if (customerInfo != null &&
           customerInfo.entitlements.active
               .containsKey(RevenueCatService.premiumEntitlement)) {
-        if (mounted) {
-          ref.read(onboardingProvider.notifier).nextStep();
-        }
+        if (mounted) context.go(AppRoutes.home);
       }
     } on PlatformException catch (e) {
       if (mounted) {
@@ -143,7 +139,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     try {
       final CustomerInfo customerInfo = await Purchases.restorePurchases();
 
-      // Sync to Supabase
       await RevenueCatService.instance.syncSubscriptionToSupabase(customerInfo);
 
       if (customerInfo.entitlements.all[RevenueCatService.premiumEntitlement]
@@ -156,7 +151,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          ref.read(onboardingProvider.notifier).nextStep();
+          context.go(AppRoutes.home);
         }
       } else {
         if (mounted) {
@@ -181,119 +176,152 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
+  Future<void> _handleSignOut() async {
+    await RevenueCatService.instance.logout();
+    await ref.read(authProvider.notifier).signOut();
+    if (mounted) context.go(AppRoutes.login);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            const SizedBox(height: AppSpacing.xl),
-
-            // Headline
-            Text(
-              'Unlock Full Access',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: AppColors.metallicGold,
-                    fontWeight: FontWeight.bold,
+    return Scaffold(
+      backgroundColor: AppColors.richBlack,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              // Back / Sign-out row
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 20,
+                    color: AppColors.textSecondary,
                   ),
-              textAlign: TextAlign.center,
-            ),
+                  onPressed: _handleSignOut,
+                  tooltip: 'Sign out',
+                ),
+              ),
 
-            const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.md),
 
-            // Value Props
-            _buildValueProp(
-              icon: Icons.headphones,
-              text: 'Unlimited Audio Stories',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildValueProp(
-              icon: Icons.emoji_events,
-              text: 'Surah Mastery Tracking',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildValueProp(
-              icon: Icons.quiz,
-              text: 'Gamified Trivia & Quizzes',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildValueProp(
-              icon: Icons.local_fire_department,
-              text: 'Streaks & XP Rewards',
-            ),
+              // Headline
+              Text(
+                'Renew Your Subscription',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      color: AppColors.metallicGold,
+                      fontWeight: FontWeight.bold,
+                    ),
+                textAlign: TextAlign.center,
+              ),
 
-            const Spacer(),
+              const SizedBox(height: AppSpacing.md),
 
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(color: AppColors.metallicGold),
-              )
-            else ...[
-              // Yearly Plan
-              _buildPricingCard(
-                title: 'Yearly Access',
-                subtitle: '${_priceFor(PackageType.annual, '\$59.99')}/year',
-                price: _priceFor(PackageType.annual, '\$59.99'),
-                period: '/year',
-                badge: 'Best Value',
-                isSelected: _selectedPlan == 'yearly',
-                onTap: () => setState(() => _selectedPlan = 'yearly'),
+              Text(
+                'Your subscription has expired. Renew to continue your journey.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: AppSpacing.xl),
+
+              // Value Props
+              _buildValueProp(
+                icon: Icons.headphones,
+                text: 'Unlimited Audio Stories',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildValueProp(
+                icon: Icons.emoji_events,
+                text: 'Surah Mastery Tracking',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildValueProp(
+                icon: Icons.quiz,
+                text: 'Gamified Trivia & Quizzes',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildValueProp(
+                icon: Icons.local_fire_department,
+                text: 'Streaks & XP Rewards',
+              ),
+
+              const Spacer(),
+
+              if (_isLoading)
+                const Center(
+                  child:
+                      CircularProgressIndicator(color: AppColors.metallicGold),
+                )
+              else ...[
+                // Yearly Plan
+                _buildPricingCard(
+                  title: 'Yearly Access',
+                  subtitle: '${_priceFor(PackageType.annual, '\$59.99')}/year',
+                  price: _priceFor(PackageType.annual, '\$59.99'),
+                  period: '/year',
+                  badge: 'Best Value',
+                  isSelected: _selectedPlan == 'yearly',
+                  onTap: () => setState(() => _selectedPlan = 'yearly'),
+                ),
+
+                const SizedBox(height: AppSpacing.sm),
+
+                // Monthly Plan
+                _buildPricingCard(
+                  title: 'Monthly Access',
+                  subtitle: 'Billed monthly',
+                  price: _priceFor(PackageType.monthly, '\$11.99'),
+                  period: '/mo',
+                  isSelected: _selectedPlan == 'monthly',
+                  onTap: () => setState(() => _selectedPlan = 'monthly'),
+                ),
+              ],
+
+              const SizedBox(height: AppSpacing.lg),
+
+              // Subscribe Button
+              _isPurchasing
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.metallicGold,
+                      ),
+                    )
+                  : PremiumButton(
+                      text: 'SUBSCRIBE NOW',
+                      onPressed: _handlePurchase,
+                    ),
+
+              const SizedBox(height: AppSpacing.sm),
+
+              Text(
+                'Cancel anytime. No hidden fees.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                textAlign: TextAlign.center,
               ),
 
               const SizedBox(height: AppSpacing.sm),
 
-              // Monthly Plan
-              _buildPricingCard(
-                title: 'Monthly Access',
-                subtitle: 'Billed monthly',
-                price: _priceFor(PackageType.monthly, '\$11.99'),
-                period: '/mo',
-                isSelected: _selectedPlan == 'monthly',
-                onTap: () => setState(() => _selectedPlan = 'monthly'),
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.lg),
-
-            // Subscribe Button
-            _isPurchasing
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.metallicGold,
-                    ),
-                  )
-                : PremiumButton(
-                    text: 'SUBSCRIBE NOW',
-                    onPressed: _handlePurchase,
-                  ),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            Text(
-              'Cancel anytime. No hidden fees.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              // Restore Purchases
+              TextButton(
+                onPressed: _isPurchasing ? null : _handleRestore,
+                child: const Text(
+                  'Restore Purchases',
+                  style: TextStyle(
                     color: AppColors.textTertiary,
+                    fontSize: 13,
                   ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // Restore Purchases
-            TextButton(
-              onPressed: _isPurchasing ? null : _handleRestore,
-              child: const Text(
-                'Restore Purchases',
-                style: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 13,
                 ),
               ),
-            ),
-
-            const SizedBox(height: AppSpacing.sm),
-          ],
+            ],
+          ),
         ),
       ),
     );

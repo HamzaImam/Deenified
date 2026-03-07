@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -7,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'services/revenuecat_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +25,15 @@ Future<void> main() async {
 
   // Initialize RevenueCat
   await _initializeRevenueCat();
+
+  // Link RevenueCat user to Supabase user (if already logged in)
+  await _linkRevenueCatUser();
+
+  // Listen for subscription changes and sync to Supabase
+  _setupSubscriptionListener();
+
+  // Listen for Supabase auth changes to link/unlink RevenueCat
+  _setupAuthListener();
 
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -45,6 +57,52 @@ Future<void> _initializeRevenueCat() async {
   )..purchasesAreCompletedBy = const PurchasesAreCompletedByRevenueCat();
 
   await Purchases.configure(configuration);
+}
+
+/// Link RevenueCat user to Supabase user if already authenticated
+Future<void> _linkRevenueCatUser() async {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user != null) {
+    developer.log(
+      'Linking RevenueCat to Supabase user: ${user.id}',
+      name: 'App',
+    );
+    await RevenueCatService.instance.login(user.id);
+  }
+}
+
+/// Listen for customer info updates (purchase, restore, expiration, renewal)
+/// and sync subscription status to Supabase
+void _setupSubscriptionListener() {
+  RevenueCatService.instance.addCustomerInfoListener((customerInfo) {
+    developer.log(
+      'CustomerInfo updated — syncing to Supabase',
+      name: 'App',
+    );
+    RevenueCatService.instance.syncSubscriptionToSupabase(customerInfo);
+  });
+}
+
+/// Listen for Supabase auth state changes to link/unlink RevenueCat user
+void _setupAuthListener() {
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+    final event = data.event;
+    final user = data.session?.user;
+
+    if (event == AuthChangeEvent.signedIn && user != null) {
+      developer.log(
+        'Auth: signed in — linking RevenueCat to ${user.id}',
+        name: 'App',
+      );
+      await RevenueCatService.instance.login(user.id);
+    } else if (event == AuthChangeEvent.signedOut) {
+      developer.log(
+        'Auth: signed out — logging out RevenueCat',
+        name: 'App',
+      );
+      await RevenueCatService.instance.logout();
+    }
+  });
 }
 
 /// Get the Supabase client instance

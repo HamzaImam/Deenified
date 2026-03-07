@@ -42,8 +42,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (response.user != null) {
         await RevenueCatService.instance.login(response.user!.id);
       }
+
+      // Check subscription status before navigating
       if (mounted) {
-        context.go('/home');
+        final hasPremium = await RevenueCatService.instance.hasPremiumAccess();
+        if (mounted) {
+          if (hasPremium) {
+            context.go('/home');
+          } else {
+            context.go('/renew');
+          }
+        }
       }
     } on AuthException catch (e) {
       if (mounted) {

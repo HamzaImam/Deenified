@@ -27,7 +27,12 @@ class ProfileScreen extends ConsumerWidget {
         elevation: 0,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          100, // Extra space to clear the bottom nav bar
+        ),
         children: [
           // Avatar + Name — depends on profile data
           profileAsync.when(

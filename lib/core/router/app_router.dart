@@ -13,6 +13,7 @@ import '../../features/audio_stories/screens/stories_list_screen.dart';
 import '../../features/audio_stories/screens/audio_player_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/practice/screens/practice_screen.dart';
+import '../../features/subscription/screens/renewal_paywall_screen.dart';
 
 /// App route paths
 class AppRoutes {
@@ -30,6 +31,7 @@ class AppRoutes {
   static const practiceQuiz = '/practice-quiz/:category';
   static const dailyChallenge = '/daily-challenge';
   static const surahReader = '/surah/:id/read';
+  static const renew = '/renew';
 }
 
 /// Main app router configuration
@@ -52,6 +54,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.onboarding,
       builder: (context, state) => const OnboardingFlowScreen(),
+    ),
+
+    // Renewal Paywall (for expired subscriptions)
+    GoRoute(
+      path: AppRoutes.renew,
+      builder: (context, state) => const RenewalPaywallScreen(),
     ),
 
     // Main Shell with Bottom Navigation

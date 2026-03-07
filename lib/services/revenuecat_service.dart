@@ -1,4 +1,8 @@
+import 'dart:developer' as developer;
+
 import 'package:purchases_flutter/purchases_flutter.dart';
+
+import 'supabase_service.dart';
 
 /// Service for managing RevenueCat subscriptions
 class RevenueCatService {
@@ -51,8 +55,32 @@ class RevenueCatService {
   Future<Offering?> getCurrentOffering() async {
     try {
       final offerings = await Purchases.getOfferings();
-      return offerings.current;
+      final current = offerings.current;
+
+      // Debug logging for package resolution
+      if (current != null) {
+        developer.log(
+          'Offering "${current.identifier}" has ${current.availablePackages.length} packages',
+          name: 'RevenueCat',
+        );
+        for (final pkg in current.availablePackages) {
+          developer.log(
+            '  Package: ${pkg.identifier} | type: ${pkg.packageType} | '
+            'product: ${pkg.storeProduct.identifier} | '
+            'price: ${pkg.storeProduct.priceString}',
+            name: 'RevenueCat',
+          );
+        }
+        developer.log(
+          '  .monthly = ${current.monthly?.identifier ?? "null"}, '
+          '.annual = ${current.annual?.identifier ?? "null"}',
+          name: 'RevenueCat',
+        );
+      }
+
+      return current;
     } catch (e) {
+      developer.log('Error fetching offerings: $e', name: 'RevenueCat');
       return null;
     }
   }
@@ -60,10 +88,14 @@ class RevenueCatService {
   /// Purchase a package
   Future<CustomerInfo?> purchasePackage(Package package) async {
     try {
-      return await Purchases.purchasePackage(package);
+      final customerInfo = await Purchases.purchasePackage(package);
+
+      // Sync to Supabase after successful purchase
+      await syncSubscriptionToSupabase(customerInfo);
+
+      return customerInfo;
     } catch (e) {
       if (e is PurchasesErrorCode) {
-        // User cancelled or other error
         return null;
       }
       rethrow;
@@ -73,18 +105,33 @@ class RevenueCatService {
   /// Restore previous purchases
   Future<CustomerInfo?> restorePurchases() async {
     try {
-      return await Purchases.restorePurchases();
+      final customerInfo = await Purchases.restorePurchases();
+
+      // Sync to Supabase after restore
+      await syncSubscriptionToSupabase(customerInfo);
+
+      return customerInfo;
     } catch (e) {
       return null;
     }
   }
 
-  /// Login user to RevenueCat
-  Future<void> login(String userId) async {
+  /// Login user to RevenueCat (links Supabase user ID)
+  Future<LogInResult?> login(String userId) async {
     try {
-      await Purchases.logIn(userId);
+      final result = await Purchases.logIn(userId);
+      developer.log(
+        'RevenueCat login: userId=$userId, isNewUser=${result.created}',
+        name: 'RevenueCat',
+      );
+
+      // Sync subscription status after login
+      await syncSubscriptionToSupabase(result.customerInfo);
+
+      return result;
     } catch (e) {
-      // Handle login error
+      developer.log('RevenueCat login error: $e', name: 'RevenueCat');
+      return null;
     }
   }
 
@@ -100,6 +147,40 @@ class RevenueCatService {
   /// Add listener for customer info updates
   void addCustomerInfoListener(void Function(CustomerInfo) listener) {
     Purchases.addCustomerInfoUpdateListener(listener);
+  }
+
+  /// Sync RevenueCat subscription status to Supabase
+  Future<void> syncSubscriptionToSupabase(CustomerInfo customerInfo) async {
+    try {
+      final premium = customerInfo.entitlements.active[premiumEntitlement];
+
+      if (premium != null && premium.isActive) {
+        // User has active premium
+        await SupabaseService.instance.updateSubscriptionStatus(
+          status: 'premium',
+          expiresAt: premium.expirationDate != null
+              ? DateTime.parse(premium.expirationDate!)
+              : null,
+        );
+        developer.log(
+          'Synced to Supabase: premium, expires=${premium.expirationDate}',
+          name: 'RevenueCat',
+        );
+      } else {
+        // No active premium — mark as expired
+        await SupabaseService.instance.updateSubscriptionStatus(
+          status: 'expired',
+          expiresAt: null,
+        );
+        developer.log(
+          'Synced to Supabase: expired',
+          name: 'RevenueCat',
+        );
+      }
+    } catch (e) {
+      developer.log('Failed to sync subscription to Supabase: $e',
+          name: 'RevenueCat');
+    }
   }
 
   /// Get subscription status details

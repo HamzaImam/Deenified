@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/router/app_router.dart';
 import '../../../providers/providers.dart';
+import '../../../services/revenuecat_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -45,16 +47,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
   }
 
-  void _navigateBasedOnAuth() {
-    // Check if user is authenticated
+  Future<void> _navigateBasedOnAuth() async {
     final isUserAuth = ref.read(isAuthenticatedProvider);
 
     if (isUserAuth) {
-      // User is authenticated, go to home (they'll see onboarding if needed)
-      context.go('/home');
+      // Check if user has premium access
+      final hasPremium = await RevenueCatService.instance.hasPremiumAccess();
+
+      if (mounted) {
+        if (hasPremium) {
+          context.go(AppRoutes.home);
+        } else {
+          // No premium — show renewal paywall
+          context.go(AppRoutes.renew);
+        }
+      }
     } else {
-      // Not authenticated, go to login
-      context.go('/login');
+      if (mounted) {
+        context.go(AppRoutes.login);
+      }
     }
   }
 

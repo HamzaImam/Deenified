@@ -196,6 +196,24 @@ class SupabaseService {
     );
   }
 
+  // ============ SUBSCRIPTION ============
+
+  /// Update subscription status in Supabase
+  /// Called by RevenueCat sync to keep Supabase aware of premium/expired status
+  Future<void> updateSubscriptionStatus({
+    required String status,
+    DateTime? expiresAt,
+  }) async {
+    final userId = currentUser?.id;
+    if (userId == null) return;
+
+    await client.from('users').update({
+      'subscription_status': status,
+      'subscription_expires_at': expiresAt?.toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
+  }
+
   // ============ STREAKS ============
 
   /// Call the database function to update streak
