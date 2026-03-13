@@ -45,6 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app does not access the microphone. This key is required by an audio library dependency.</string>
 	<!-- Background Audio for audio stories -->
 	<key>UIBackgroundModes</key>
 	<array>
