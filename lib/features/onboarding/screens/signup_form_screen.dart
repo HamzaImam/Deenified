@@ -423,7 +423,7 @@ class _SignupFormScreenState extends ConsumerState<SignupFormScreen> {
                         text: 'By creating an account, you agree to our '),
                     WidgetSpan(
                       child: GestureDetector(
-                        onTap: () => _launchUrl('https://deenified.com/terms'),
+                        onTap: () => _launchUrl('https://deenified.com/pages/terms'),
                         child: Text(
                           'Terms of Service',
                           style:

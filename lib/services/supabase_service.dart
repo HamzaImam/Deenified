@@ -54,6 +54,13 @@ class SupabaseService {
     await client.auth.resetPasswordForEmail(email);
   }
 
+  /// Delete the current user's account and all associated data.
+  /// Uses a security-definer RPC that deletes from auth.users,
+  /// which cascades to public.users and story_progress.
+  Future<void> deleteAccount() async {
+    await client.rpc('delete_own_account');
+  }
+
   /// Listen to auth state changes
   Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
 

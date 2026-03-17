@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../providers/providers.dart';
 import '../../../services/revenuecat_service.dart';
+import '../../../services/supabase_service.dart';
 import '../../../shared/widgets/widgets.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -161,6 +162,15 @@ class ProfileScreen extends ConsumerWidget {
             isDestructive: true,
             onTap: () => _showSignOutDialog(context, ref),
           ),
+          _buildMenuItem(
+            context,
+            ref: ref,
+            icon: Icons.delete_forever,
+            title: 'Delete Account',
+            subtitle: 'Permanently delete your account and data',
+            isDestructive: true,
+            onTap: () => _showDeleteAccountDialog(context, ref),
+          ),
 
           const SizedBox(height: AppSpacing.xl),
         ],
@@ -173,6 +183,86 @@ class ProfileScreen extends ConsumerWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.deepCharcoal,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+            const SizedBox(width: 8),
+            const Text('Delete Account'),
+          ],
+        ),
+        content: const Text(
+          'This will permanently delete your account and all your data '
+          '(progress, streaks, story history). This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+
+              // Show loading overlay
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.metallicGold,
+                  ),
+                ),
+              );
+
+              try {
+                await SupabaseService.instance.deleteAccount();
+                await RevenueCatService.instance.logout();
+                await ref.read(authProvider.notifier).signOut();
+                if (context.mounted) {
+                  // Pop the loading dialog
+                  Navigator.of(context, rootNavigator: true).pop();
+                  context.go('/login');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  // Pop the loading dialog
+                  Navigator.of(context, rootNavigator: true).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Failed to delete account. Please try again.',
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Delete Forever',
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSignOutDialog(BuildContext context, WidgetRef ref) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/widgets.dart';
@@ -27,6 +28,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   void initState() {
     super.initState();
     _loadOfferings();
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> _loadOfferings() async {
@@ -290,6 +298,48 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   fontSize: 13,
                 ),
               ),
+            ),
+
+            // Terms of Use & Privacy Policy (required by Apple 3.1.2c)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => _launchUrl('https://deenified.com/pages/terms'),
+                  child: Text(
+                    'Terms of Use',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.metallicGold,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.metallicGold,
+                          fontSize: 12,
+                        ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    '•',
+                    style: TextStyle(
+                      color: AppColors.textTertiary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () =>
+                      _launchUrl('https://deenified.com/pages/privacy'),
+                  child: Text(
+                    'Privacy Policy',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.metallicGold,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.metallicGold,
+                          fontSize: 12,
+                        ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: AppSpacing.sm),
