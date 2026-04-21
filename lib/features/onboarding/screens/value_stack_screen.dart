@@ -10,20 +10,21 @@ class ValueStackScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Your Deenified Pro Plan',
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: ListView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'Your Deenified Pro Plan',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 _buildValueItem(context, 'Full Access to 37 Juz Amma Tracks',
                     'Value: \$49'),
                 _buildValueItem(
@@ -60,18 +61,19 @@ class ValueStackScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                PremiumButton(
+                  text: 'SEE MY PRICE',
+                  onPressed: () {
+                    ref.read(onboardingProvider.notifier).nextStep();
+                  },
+                ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
-          PremiumButton(
-            text: 'SEE MY PRICE',
-            onPressed: () {
-              ref.read(onboardingProvider.notifier).nextStep();
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -20,88 +20,95 @@ class DiagnosisScreen extends ConsumerWidget {
       problem = 'Traditional methods feel dry';
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.deepCharcoal,
-              border: Border.all(color: AppColors.glassBorder),
-            ),
-            child: const Icon(
-              Icons.analytics_outlined,
-              size: 48,
-              color: AppColors.softGold,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'We\'ve analyzed your profile.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Here is the truth:',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.deepCharcoal,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                  color: AppColors.metallicGold.withValues(alpha: 0.3)),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.deepCharcoal,
+                    border: Border.all(color: AppColors.glassBorder),
+                  ),
+                  child: const Icon(
+                    Icons.analytics_outlined,
+                    size: 48,
+                    color: AppColors.softGold,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 Text(
-                  problem,
+                  'We\'ve analyzed your profile.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Here is the truth:',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.error, // Use error color for "Problem"
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  '...without the right system.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: AppColors.deepCharcoal,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                        color: AppColors.metallicGold.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        problem,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: AppColors.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        '...without the right system.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'But with small, bite-sized daily habits, you can master your Deen effortlessly.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        height: 1.5,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                PremiumButton(
+                  text: 'SHOW ME THE PLAN',
+                  onPressed: () {
+                    ref.read(onboardingProvider.notifier).nextStep();
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xl),
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'But with small, bite-sized daily habits, you can master your Deen effortlessly.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.5,
-                ),
-          ),
-          const Spacer(),
-          PremiumButton(
-            text: 'SHOW ME THE PLAN',
-            onPressed: () {
-              ref.read(onboardingProvider.notifier).nextStep();
-            },
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+        );
+      },
     );
   }
 }

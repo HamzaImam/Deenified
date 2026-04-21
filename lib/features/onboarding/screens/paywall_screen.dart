@@ -192,159 +192,167 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            const SizedBox(height: AppSpacing.xl),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: AppSpacing.xl),
 
-            // Headline
-            Text(
-              'Unlock Full Access',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: AppColors.metallicGold,
-                    fontWeight: FontWeight.bold,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            // Value Props
-            _buildValueProp(
-              icon: Icons.headphones,
-              text: 'Unlimited Audio Stories',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildValueProp(
-              icon: Icons.emoji_events,
-              text: 'Surah Mastery Tracking',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildValueProp(
-              icon: Icons.quiz,
-              text: 'Gamified Trivia & Quizzes',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildValueProp(
-              icon: Icons.local_fire_department,
-              text: 'Streaks & XP Rewards',
-            ),
-
-            const Spacer(),
-
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(color: AppColors.metallicGold),
-              )
-            else ...[
-              // Yearly Plan
-              _buildPricingCard(
-                title: 'Yearly Access',
-                subtitle: '${_priceFor(PackageType.annual, '\$59.99')}/year',
-                price: _priceFor(PackageType.annual, '\$59.99'),
-                period: '/year',
-                badge: 'Best Value',
-                isSelected: _selectedPlan == 'yearly',
-                onTap: () => setState(() => _selectedPlan = 'yearly'),
-              ),
-
-              const SizedBox(height: AppSpacing.sm),
-
-              // Monthly Plan
-              _buildPricingCard(
-                title: 'Monthly Access',
-                subtitle: 'Billed monthly',
-                price: _priceFor(PackageType.monthly, '\$11.99'),
-                period: '/mo',
-                isSelected: _selectedPlan == 'monthly',
-                onTap: () => setState(() => _selectedPlan = 'monthly'),
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.lg),
-
-            // Subscribe Button
-            _isPurchasing
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.metallicGold,
-                    ),
-                  )
-                : PremiumButton(
-                    text: 'SUBSCRIBE NOW',
-                    onPressed: _handlePurchase,
-                  ),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            Text(
-              'Cancel anytime. No hidden fees.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // Restore Purchases
-            TextButton(
-              onPressed: _isPurchasing ? null : _handleRestore,
-              child: const Text(
-                'Restore Purchases',
-                style: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-
-            // Terms of Use & Privacy Policy (required by Apple 3.1.2c)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () => _launchUrl('https://deenified.com/pages/terms'),
-                  child: Text(
-                    'Terms of Use',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  // Headline
+                  Text(
+                    'Unlock Full Access',
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           color: AppColors.metallicGold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.metallicGold,
-                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                         ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    '•',
-                    style: TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: 12,
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // Value Props
+                  _buildValueProp(
+                    icon: Icons.headphones,
+                    text: 'Unlimited Audio Stories',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildValueProp(
+                    icon: Icons.emoji_events,
+                    text: 'Surah Mastery Tracking',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildValueProp(
+                    icon: Icons.quiz,
+                    text: 'Gamified Trivia & Quizzes',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildValueProp(
+                    icon: Icons.local_fire_department,
+                    text: 'Streaks & XP Rewards',
+                  ),
+
+                  const SizedBox(height: AppSpacing.xxl),
+
+                  if (_isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(color: AppColors.metallicGold),
+                    )
+                  else ...[
+                    // Yearly Plan
+                    _buildPricingCard(
+                      title: 'Yearly Access',
+                      subtitle: '${_priceFor(PackageType.annual, '\$59.99')}/year',
+                      price: _priceFor(PackageType.annual, '\$59.99'),
+                      period: '/year',
+                      badge: 'Best Value',
+                      isSelected: _selectedPlan == 'yearly',
+                      onTap: () => setState(() => _selectedPlan = 'yearly'),
+                    ),
+
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // Monthly Plan
+                    _buildPricingCard(
+                      title: 'Monthly Access',
+                      subtitle: 'Billed monthly',
+                      price: _priceFor(PackageType.monthly, '\$11.99'),
+                      period: '/mo',
+                      isSelected: _selectedPlan == 'monthly',
+                      onTap: () => setState(() => _selectedPlan = 'monthly'),
+                    ),
+                  ],
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Subscribe Button
+                  _isPurchasing
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.metallicGold,
+                          ),
+                        )
+                      : PremiumButton(
+                          text: 'SUBSCRIBE NOW',
+                          onPressed: _handlePurchase,
+                        ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  Text(
+                    'Cancel anytime. No hidden fees.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // Restore Purchases
+                  TextButton(
+                    onPressed: _isPurchasing ? null : _handleRestore,
+                    child: const Text(
+                      'Restore Purchases',
+                      style: TextStyle(
+                        color: AppColors.textTertiary,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () =>
-                      _launchUrl('https://deenified.com/pages/privacy'),
-                  child: Text(
-                    'Privacy Policy',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.metallicGold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.metallicGold,
-                          fontSize: 12,
-                        ),
-                  ),
-                ),
-              ],
-            ),
 
-            const SizedBox(height: AppSpacing.sm),
-          ],
-        ),
+                  // Terms of Use & Privacy Policy (required by Apple 3.1.2c)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _launchUrl('https://deenified.com/pages/terms'),
+                        child: Text(
+                          'Terms of Use',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.metallicGold,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.metallicGold,
+                                fontSize: 12,
+                              ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          '•',
+                          style: TextStyle(
+                            color: AppColors.textTertiary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () =>
+                            _launchUrl('https://deenified.com/pages/privacy'),
+                        child: Text(
+                          'Privacy Policy',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.metallicGold,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.metallicGold,
+                                fontSize: 12,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

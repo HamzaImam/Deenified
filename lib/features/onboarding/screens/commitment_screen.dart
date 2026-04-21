@@ -12,21 +12,22 @@ class CommitmentScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(onboardingProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'How much time can you commit daily?',
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: ListView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'How much time can you commit daily?',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 _buildOption(
                   context,
                   ref,
@@ -51,20 +52,20 @@ class CommitmentScreen extends ConsumerWidget {
                   value: 'intense',
                   isSelected: state.commitmentLevel == 'intense',
                 ),
-
+                const SizedBox(height: AppSpacing.xl),
+                PremiumButton(
+                  text: 'I COMMIT',
+                  onPressed: state.commitmentLevel != null
+                      ? () => ref.read(onboardingProvider.notifier).nextStep()
+                      : () {},
+                  isOutlined: state.commitmentLevel == null,
+                ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
-          PremiumButton(
-            text: 'I COMMIT',
-            onPressed: state.commitmentLevel != null
-                ? () => ref.read(onboardingProvider.notifier).nextStep()
-                : () {},
-            isOutlined: state.commitmentLevel == null,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
+        );
+      },
     );
   }
 

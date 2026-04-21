@@ -10,62 +10,69 @@ class BenefitsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
-          Text(
-            'The Transformation',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'The Transformation',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.metallicGold,
+                        letterSpacing: 2,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'From distant & overwhelmed...',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Icon(
+                  Icons.arrow_downward,
                   color: AppColors.metallicGold,
-                  letterSpacing: 2,
+                  size: 32,
                 ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'From distant & overwhelmed...',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppColors.textTertiary,
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'To confident & connected.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        height: 1.3,
+                      ),
                 ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          const Icon(
-            Icons.arrow_downward,
-            color: AppColors.metallicGold,
-            size: 32,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'To confident & connected.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  height: 1.3,
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Imagine facing your Lord with a heart full of His words.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.textSecondary,
+                      ),
                 ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'Imagine facing your Lord with a heart full of His words.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.textSecondary,
+                const SizedBox(height: AppSpacing.xxl),
+                PremiumButton(
+                  text: 'CONTINUE',
+                  onPressed: () {
+                    ref.read(onboardingProvider.notifier).nextStep();
+                  },
                 ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
+            ),
           ),
-          const Spacer(),
-          PremiumButton(
-            text: 'CONTINUE',
-            onPressed: () {
-              ref.read(onboardingProvider.notifier).nextStep();
-            },
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+        );
+      },
     );
   }
 }

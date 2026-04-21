@@ -48,98 +48,109 @@ class SocialProofScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      child: Column(
-        children: [
-          const SizedBox(height: AppSpacing.xl),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          children: [
+            // Scrollable top section
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Column(
+                  children: [
+                    const SizedBox(height: AppSpacing.xl),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Text(
-              'Join Thousands Already Learning',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppColors.metallicGold,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Text(
-              'Here\'s what our community says',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // Horizontal scrolling testimonials
-          Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              itemCount: _testimonials.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
-              itemBuilder: (context, index) {
-                final testimonial = _testimonials[index];
-                return SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.75,
-                  child: _TestimonialCard(testimonial: testimonial),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // Star rating summary
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ...List.generate(
-                  5,
-                  (index) => const Icon(
-                    Icons.star,
-                    size: 20,
-                    color: AppColors.metallicGold,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  '4.9 average',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: Text(
+                        'Join Thousands Already Learning',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: AppColors.metallicGold,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.sm),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: Text(
+                        'Here\'s what our community says',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Horizontal scrolling testimonials
+                    SizedBox(
+                      height: 220,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        itemCount: _testimonials.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+                        itemBuilder: (context, index) {
+                          final testimonial = _testimonials[index];
+                          return SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.75,
+                            child: _TestimonialCard(testimonial: testimonial),
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Star rating summary
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ...List.generate(
+                            5,
+                            (index) => const Icon(
+                              Icons.star,
+                              size: 20,
+                              color: AppColors.metallicGold,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            '4.9 average',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.lg),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: PremiumButton(
-              text: 'JOIN THE COMMUNITY',
-              onPressed: () {
-                ref.read(onboardingProvider.notifier).nextStep();
-              },
+            // Fixed bottom button area
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: PremiumButton(
+                text: 'JOIN THE COMMUNITY',
+                onPressed: () {
+                  ref.read(onboardingProvider.notifier).nextStep();
+                },
+              ),
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        );
+      },
     );
   }
 }
@@ -175,7 +186,7 @@ class _TestimonialCard extends StatelessWidget {
             color: AppColors.metallicGold,
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
 
           // Quote text
           Expanded(
@@ -189,7 +200,7 @@ class _TestimonialCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
 
           // Divider
           Container(
@@ -197,26 +208,26 @@ class _TestimonialCard extends StatelessWidget {
             color: AppColors.glassBorder,
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
 
           // Author row
           Row(
             children: [
               // Avatar
               CircleAvatar(
-                radius: 20,
+                radius: 16,
                 backgroundColor: testimonial.color,
                 child: Text(
                   testimonial.name[0],
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 14,
                   ),
                 ),
               ),
 
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
 
               // Name & stars
               Expanded(

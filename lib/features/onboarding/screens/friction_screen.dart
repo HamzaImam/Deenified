@@ -12,28 +12,29 @@ class FrictionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(onboardingProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'What stops you from practicing?',
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Select all that apply',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: ListView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'What stops you from practicing?',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Select all that apply',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 _buildOption(
                   context,
                   ref,
@@ -62,19 +63,20 @@ class FrictionScreen extends ConsumerWidget {
                   value: 'boring',
                   isSelected: state.barriers.contains('boring'),
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                PremiumButton(
+                  text: 'CONTINUE',
+                  onPressed: state.barriers.isNotEmpty
+                      ? () => ref.read(onboardingProvider.notifier).nextStep()
+                      : () {},
+                  isOutlined: state.barriers.isEmpty,
+                ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
-          PremiumButton(
-            text: 'CONTINUE',
-            onPressed: state.barriers.isNotEmpty
-                ? () => ref.read(onboardingProvider.notifier).nextStep()
-                : () {},
-            isOutlined: state.barriers.isEmpty,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
+        );
+      },
     );
   }
 

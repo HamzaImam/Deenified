@@ -12,20 +12,21 @@ class IdentityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(onboardingProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Who are you building this habit for?',
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: ListView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'Who are you building this habit for?',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 _buildOption(
                   context,
                   ref,
@@ -58,19 +59,20 @@ class IdentityScreen extends ConsumerWidget {
                   icon: Icons.waving_hand_outlined,
                   isSelected: state.userType == 'new_muslim',
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                PremiumButton(
+                  text: 'CONTINUE',
+                  onPressed: state.userType != null
+                      ? () => ref.read(onboardingProvider.notifier).nextStep()
+                      : () {},
+                  isOutlined: state.userType == null,
+                ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
-          PremiumButton(
-            text: 'CONTINUE',
-            onPressed: state.userType != null
-                ? () => ref.read(onboardingProvider.notifier).nextStep()
-                : () {}, // Disabled state handled by button visual usually, but here simple no-op
-            isOutlined: state.userType == null,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -77,63 +77,70 @@ class _MediaRevealScreenState extends ConsumerState<MediaRevealScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: AppSpacing.xl),
 
-          // Video Player / Placeholder
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Container(
-              height: 240,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.deepCharcoal,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(color: AppColors.glassBorder),
-              ),
-              child: _buildVideoContent(),
+                // Video Player / Placeholder
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  child: Container(
+                    height: 240,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.deepCharcoal,
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      border: Border.all(color: AppColors.glassBorder),
+                    ),
+                    child: _buildVideoContent(),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
+                Text(
+                  'Dramatized Audio Originals',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.metallicGold,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                Text(
+                  'Experience the Qur\'an and Seerah like never before with immersive soundscapes and professional narration.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                ),
+
+                const SizedBox(height: AppSpacing.xxl),
+
+                PremiumButton(
+                  text: 'I\'M LISTENING',
+                  onPressed: () {
+                    _videoController?.pause();
+                    ref.read(onboardingProvider.notifier).nextStep();
+                  },
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+              ],
             ),
           ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          Text(
-            'Dramatized Audio Originals',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppColors.metallicGold,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-
-          Text(
-            'Experience the Qur\'an and Seerah like never before with immersive soundscapes and professional narration.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-          ),
-
-          const Spacer(),
-
-          PremiumButton(
-            text: 'I\'M LISTENING',
-            onPressed: () {
-              _videoController?.pause();
-              ref.read(onboardingProvider.notifier).nextStep();
-            },
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+        );
+      },
     );
   }
 

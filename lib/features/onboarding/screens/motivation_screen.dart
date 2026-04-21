@@ -12,20 +12,21 @@ class MotivationScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(onboardingProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'What is your main goal?',
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: ListView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'What is your main goal?',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 _buildOption(
                   context,
                   ref,
@@ -54,19 +55,20 @@ class MotivationScreen extends ConsumerWidget {
                   value: 'halal_fun',
                   isSelected: state.motivation == 'halal_fun',
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                PremiumButton(
+                  text: 'CONTINUE',
+                  onPressed: state.motivation != null
+                      ? () => ref.read(onboardingProvider.notifier).nextStep()
+                      : () {},
+                  isOutlined: state.motivation == null,
+                ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
-          PremiumButton(
-            text: 'CONTINUE',
-            onPressed: state.motivation != null
-                ? () => ref.read(onboardingProvider.notifier).nextStep()
-                : () {},
-            isOutlined: state.motivation == null,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
+        );
+      },
     );
   }
 

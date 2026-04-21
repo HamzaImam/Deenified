@@ -70,55 +70,63 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.xl * 2),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: AppSpacing.xl),
 
-          // Spinner
-          SizedBox(
-            width: 80,
-            height: 80,
-            child: CircularProgressIndicator(
-              value: _progress,
-              strokeWidth: 6,
-              backgroundColor: AppColors.deepCharcoal,
-              valueColor: const AlwaysStoppedAnimation(AppColors.metallicGold),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xxl),
-
-          // Changing Text
-          SizedBox(
-            height: 60,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Text(
-                _messages[_currentMessageIndex],
-                key: ValueKey<int>(_currentMessageIndex),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-              ),
-            ),
-          ),
-
-          const Spacer(),
-
-          Text(
-            '${(_progress * 100).toInt()}%',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textTertiary,
+                // Spinner
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: CircularProgressIndicator(
+                    value: _progress,
+                    strokeWidth: 6,
+                    backgroundColor: AppColors.deepCharcoal,
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppColors.metallicGold),
+                  ),
                 ),
-          ),
 
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+                const SizedBox(height: AppSpacing.xxl),
+
+                // Changing Text
+                SizedBox(
+                  height: 60,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      _messages[_currentMessageIndex],
+                      key: ValueKey<int>(_currentMessageIndex),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xxl),
+
+                Text(
+                  '${(_progress * 100).toInt()}%',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

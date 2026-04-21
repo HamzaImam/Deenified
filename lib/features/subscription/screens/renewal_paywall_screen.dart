@@ -187,141 +187,149 @@ class _RenewalPaywallScreenState extends ConsumerState<RenewalPaywallScreen> {
     return Scaffold(
       backgroundColor: AppColors.richBlack,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            children: [
-              // Back / Sign-out row
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-                  onPressed: _handleSignOut,
-                  tooltip: 'Sign out',
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              // Headline
-              Text(
-                'Renew Your Subscription',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      color: AppColors.metallicGold,
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              Text(
-                'Your subscription has expired. Renew to continue your journey.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: AppSpacing.xl),
-
-              // Value Props
-              _buildValueProp(
-                icon: Icons.headphones,
-                text: 'Unlimited Audio Stories',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildValueProp(
-                icon: Icons.emoji_events,
-                text: 'Surah Mastery Tracking',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildValueProp(
-                icon: Icons.quiz,
-                text: 'Gamified Trivia & Quizzes',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildValueProp(
-                icon: Icons.local_fire_department,
-                text: 'Streaks & XP Rewards',
-              ),
-
-              const Spacer(),
-
-              if (_isLoading)
-                const Center(
-                  child:
-                      CircularProgressIndicator(color: AppColors.metallicGold),
-                )
-              else ...[
-                // Yearly Plan
-                _buildPricingCard(
-                  title: 'Yearly Access',
-                  subtitle: '${_priceFor(PackageType.annual, '\$59.99')}/year',
-                  price: _priceFor(PackageType.annual, '\$59.99'),
-                  period: '/year',
-                  badge: 'Best Value',
-                  isSelected: _selectedPlan == 'yearly',
-                  onTap: () => setState(() => _selectedPlan = 'yearly'),
-                ),
-
-                const SizedBox(height: AppSpacing.sm),
-
-                // Monthly Plan
-                _buildPricingCard(
-                  title: 'Monthly Access',
-                  subtitle: 'Billed monthly',
-                  price: _priceFor(PackageType.monthly, '\$11.99'),
-                  period: '/mo',
-                  isSelected: _selectedPlan == 'monthly',
-                  onTap: () => setState(() => _selectedPlan = 'monthly'),
-                ),
-              ],
-
-              const SizedBox(height: AppSpacing.lg),
-
-              // Subscribe Button
-              _isPurchasing
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.metallicGold,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.lg * 2),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Back / Sign-out row
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new,
+                          size: 20,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: _handleSignOut,
+                        tooltip: 'Sign out',
                       ),
-                    )
-                  : PremiumButton(
-                      text: 'SUBSCRIBE NOW',
-                      onPressed: _handlePurchase,
                     ),
 
-              const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
 
-              Text(
-                'Cancel anytime. No hidden fees.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textTertiary,
+                    // Headline
+                    Text(
+                      'Renew Your Subscription',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            color: AppColors.metallicGold,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                textAlign: TextAlign.center,
-              ),
 
-              const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
 
-              // Restore Purchases
-              TextButton(
-                onPressed: _isPurchasing ? null : _handleRestore,
-                child: const Text(
-                  'Restore Purchases',
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 13,
-                  ),
+                    Text(
+                      'Your subscription has expired. Renew to continue your journey.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Value Props
+                    _buildValueProp(
+                      icon: Icons.headphones,
+                      text: 'Unlimited Audio Stories',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildValueProp(
+                      icon: Icons.emoji_events,
+                      text: 'Surah Mastery Tracking',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildValueProp(
+                      icon: Icons.quiz,
+                      text: 'Gamified Trivia & Quizzes',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildValueProp(
+                      icon: Icons.local_fire_department,
+                      text: 'Streaks & XP Rewards',
+                    ),
+
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    if (_isLoading)
+                      const Center(
+                        child:
+                            CircularProgressIndicator(color: AppColors.metallicGold),
+                      )
+                    else ...[
+                      // Yearly Plan
+                      _buildPricingCard(
+                        title: 'Yearly Access',
+                        subtitle: '${_priceFor(PackageType.annual, '\$59.99')}/year',
+                        price: _priceFor(PackageType.annual, '\$59.99'),
+                        period: '/year',
+                        badge: 'Best Value',
+                        isSelected: _selectedPlan == 'yearly',
+                        onTap: () => setState(() => _selectedPlan = 'yearly'),
+                      ),
+
+                      const SizedBox(height: AppSpacing.sm),
+
+                      // Monthly Plan
+                      _buildPricingCard(
+                        title: 'Monthly Access',
+                        subtitle: 'Billed monthly',
+                        price: _priceFor(PackageType.monthly, '\$11.99'),
+                        period: '/mo',
+                        isSelected: _selectedPlan == 'monthly',
+                        onTap: () => setState(() => _selectedPlan = 'monthly'),
+                      ),
+                    ],
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Subscribe Button
+                    _isPurchasing
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.metallicGold,
+                            ),
+                          )
+                        : PremiumButton(
+                            text: 'SUBSCRIBE NOW',
+                            onPressed: _handlePurchase,
+                          ),
+
+                    const SizedBox(height: AppSpacing.sm),
+
+                    Text(
+                      'Cancel anytime. No hidden fees.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // Restore Purchases
+                    TextButton(
+                      onPressed: _isPurchasing ? null : _handleRestore,
+                      child: const Text(
+                        'Restore Purchases',
+                        style: TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
